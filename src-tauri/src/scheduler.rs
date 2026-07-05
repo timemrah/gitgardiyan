@@ -14,12 +14,12 @@ fn snapshot(p: &Project) -> Snapshot {
 }
 
 pub fn start(app: AppHandle) {
-    tauri::async_runtime::spawn(async move {
+    std::thread::spawn(move || {
         let mut last_check: HashMap<PathBuf, Instant> = HashMap::new();
         let mut last_backup: HashMap<PathBuf, String> = HashMap::new();
         loop {
             tick(&app, &mut last_check, &mut last_backup);
-            tokio::time::sleep(std::time::Duration::from_secs(60)).await;
+            std::thread::sleep(std::time::Duration::from_secs(60));
         }
     });
 }
