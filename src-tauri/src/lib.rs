@@ -4,6 +4,7 @@ pub mod git;
 pub mod log;
 pub mod notifier;
 pub mod rules;
+pub mod scheduler;
 pub mod state;
 
 use state::AppState;
@@ -29,6 +30,7 @@ pub fn run() {
                 log_dir: dir,
                 notifications: Mutex::new(HashMap::new()),
             });
+            scheduler::start(app.handle().clone());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
