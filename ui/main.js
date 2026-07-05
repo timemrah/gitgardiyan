@@ -3,6 +3,12 @@ const { open } = window.__TAURI__.dialog;
 
 const errBox = document.getElementById('error');
 
+function clampInt(value, min, fallback) {
+  const n = parseInt(value, 10);
+  if (Number.isNaN(n)) return fallback;
+  return Math.max(min, n);
+}
+
 function showError(e) {
   errBox.hidden = false;
   errBox.textContent = String(e);
@@ -51,8 +57,8 @@ function render(views) {
     el.querySelector('.save').addEventListener('click', async () => {
       const updated = {
         ...p,
-        threshold: parseInt(root.querySelector('.threshold').value, 10) || 10,
-        interval_minutes: parseInt(root.querySelector('.interval').value, 10) || 60,
+        threshold: clampInt(root.querySelector('.threshold').value, 1, 10),
+        interval_minutes: clampInt(root.querySelector('.interval').value, 5, 60),
         backup_time: root.querySelector('.backup').value || '23:00',
         rule_changes: root.querySelector('.r1').checked,
         rule_remote: root.querySelector('.r2').checked,
