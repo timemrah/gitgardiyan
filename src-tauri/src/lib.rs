@@ -41,6 +41,14 @@ pub fn run() {
                 log_dir: dir,
                 notifications: Mutex::new(HashMap::new()),
             });
+            if std::process::Command::new("git").arg("--version").output().is_err() {
+                log::line(&app.state::<state::AppState>().log_dir, "git bulunamadı — uygulama çalışamaz");
+                use tauri_plugin_dialog::DialogExt;
+                app.dialog()
+                    .message("Sistemde 'git' komutu bulunamadı. GitGardiyan çalışmak için git'e ihtiyaç duyar. Lütfen git'i kurun ve uygulamayı yeniden başlatın.")
+                    .title("GitGardiyan — git bulunamadı")
+                    .show(|_| {});
+            }
             scheduler::start(app.handle().clone());
             tray::create(app)?;
             Ok(())

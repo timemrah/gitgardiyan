@@ -21,6 +21,9 @@ pub enum Decision {
 
 /// Saf karar fonksiyonu. Öncelik: günlük yedek > kural 1 > kural 2 > sessiz push.
 /// `today`: "YYYY-MM-DD". `is_backup_run`: bu tetik günlük yedek tetiği mi.
+/// SilentPush yalnızca en az bir otomatik commit kuralı (kural 1 veya kural 3)
+/// aktifken çalışır — aksi halde kullanıcının kasıtlı yaptığı commit'ler sessizce
+/// push edilmiş olur.
 pub fn decide(p: &Project, s: &Snapshot, today: &str, is_backup_run: bool) -> Decision {
     if is_backup_run {
         if p.rule_backup && (s.changed_files > 0 || s.unpushed > 0) {
@@ -35,7 +38,7 @@ pub fn decide(p: &Project, s: &Snapshot, today: &str, is_backup_run: bool) -> De
     if p.rule_remote && s.remote_ahead > 0 {
         return Decision::PullQuestion { commits: s.remote_ahead };
     }
-    if s.unpushed > 0 {
+    if (p.rule_changes || p.rule_backup) && s.unpushed > 0 {
         return Decision::SilentPush;
     }
     Decision::Nothing
@@ -124,5 +127,14 @@ mod tests {
             Decision::Nothing
         );
         assert_eq!(decide(&p, &snap(99, 0, 0), "2026-07-06", true), Decision::Nothing);
+    }
+
+    #[test]
+    fn tum_kurallar_kapaliyken_silent_push_da_calismaz() {
+        let mut p = proje();
+        p.rule_changes = false;
+        p.rule_remote = false;
+        p.rule_backup = false;
+        assert_eq!(decide(&p, &snap(0, 0, 3), "2026-07-06", false), Decision::Nothing);
     }
 }
