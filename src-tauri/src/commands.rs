@@ -110,15 +110,19 @@ pub async fn notify_action(
             if let Some(p) = cfg.projects.iter_mut().find(|p| p.path == repo) {
                 p.muted_date = Some(today());
             }
-            cfg.save(&state.config_path).map_err(|e| e.to_string())?;
+            cfg.save(&state.config_path)
+                .map_err(|e| e.to_string())
+                .inspect_err(|e| log::line(&log_dir, &format!("{name}: ayar kaydı hatası: {e}")))?;
             log::line(&log_dir, &format!("{name}: bugün için susturuldu"));
             Ok("Bugün bir daha sorulmayacak.".into())
         }
         "proceed" => {
-            let changed = git::changed_file_count(&repo)?;
+            let changed = git::changed_file_count(&repo)
+                .inspect_err(|e| log::line(&log_dir, &format!("{name}: status hatası: {e}")))?;
             if changed > 0 {
                 let msg = format!("Otomatik yedek: {} ({} dosya)", now_minute(), changed);
-                git::commit_all(&repo, &msg)?;
+                git::commit_all(&repo, &msg)
+                    .inspect_err(|e| log::line(&log_dir, &format!("{name}: commit hatası: {e}")))?;
                 log::line(&log_dir, &format!("{name}: commit — {msg} (kural {rule})"));
             }
             match git::push(&repo) {
@@ -135,13 +139,16 @@ pub async fn notify_action(
             }
         }
         "pull" => {
-            let changed = git::changed_file_count(&repo)?;
+            let changed = git::changed_file_count(&repo)
+                .inspect_err(|e| log::line(&log_dir, &format!("{name}: status hatası: {e}")))?;
             if changed > 0 {
                 let msg = format!("Otomatik yedek: {} ({} dosya)", now_minute(), changed);
-                git::commit_all(&repo, &msg)?;
+                git::commit_all(&repo, &msg)
+                    .inspect_err(|e| log::line(&log_dir, &format!("{name}: commit hatası: {e}")))?;
                 log::line(&log_dir, &format!("{name}: pull öncesi commit — {msg}"));
             }
-            match git::pull_rebase(&repo)? {
+            match git::pull_rebase(&repo)
+                .inspect_err(|e| log::line(&log_dir, &format!("{name}: pull hatası: {e}")))? {
                 git::PullOutcome::Ok => {
                     log::line(&log_dir, &format!("{name}: pull --rebase tamamlandı"));
                     Ok(format!("{name}: GitHub'daki değişiklikler çekildi."))
