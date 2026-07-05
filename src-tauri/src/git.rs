@@ -69,7 +69,8 @@ pub fn pull_rebase(repo: &Path) -> Result<PullOutcome, String> {
             let gitdir_raw = run(repo, &["rev-parse", "--git-dir"])?;
             let gitdir = repo.join(gitdir_raw.trim());
             if gitdir.join("rebase-merge").exists() || gitdir.join("rebase-apply").exists() {
-                let _ = run(repo, &["rebase", "--abort"]);
+                run(repo, &["rebase", "--abort"])
+                    .map_err(|e| format!("rebase geri alınamadı, depo rebase ortasında olabilir: {e}"))?;
                 Ok(PullOutcome::Conflict)
             } else {
                 Err(e)
