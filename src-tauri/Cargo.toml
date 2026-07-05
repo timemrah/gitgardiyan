@@ -1,0 +1,23 @@
+[package]
+name = "gitgardiyan"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "gitgardiyan_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-dialog = "2"
+tauri-plugin-autostart = "2"
+tauri-plugin-single-instance = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+chrono = "0.4"
+
+[dev-dependencies]
+tempfile = "3"
