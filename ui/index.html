@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>GitGardiyan</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>GitGardiyan</h1>
+    <label class="auto"><input type="checkbox" id="autostart"> Açılışta başlat</label>
+    <button id="refresh">Yenile</button>
+    <button id="add" class="primary">Proje Ekle</button>
+  </header>
+  <div id="error" hidden></div>
+  <main id="list"></main>
+  <template id="row">
+    <section class="project">
+      <div class="head">
+        <strong class="name"></strong>
+        <span class="status"></span>
+        <button class="remove">Kaldır</button>
+      </div>
+      <div class="path"></div>
+      <div class="settings">
+        <label>Dosya eşiği <input type="number" class="threshold" min="1"></label>
+        <label>Kontrol (dk) <input type="number" class="interval" min="5"></label>
+        <label>Yedek saati <input type="time" class="backup"></label>
+        <label><input type="checkbox" class="r1"> Değişiklik kuralı</label>
+        <label><input type="checkbox" class="r2"> Uzak kontrol</label>
+        <label><input type="checkbox" class="r3"> Günlük yedek</label>
+        <button class="save">Kaydet</button>
+      </div>
+    </section>
+  </template>
+  <script src="main.js"></script>
+</body>
+</html>

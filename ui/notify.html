@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>GitGardiyan</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: system-ui, sans-serif;
+    background: #1e2430; color: #e8ecf1;
+    height: 100vh; display: flex; flex-direction: column;
+    padding: 16px; border: 1px solid #3a4356; border-radius: 8px;
+    user-select: none; cursor: default;
+  }
+  #title { font-size: 12px; color: #8b96a8; margin-bottom: 8px; }
+  #msg { font-size: 14px; line-height: 1.45; flex: 1; }
+  #timer { font-size: 26px; font-weight: 700; text-align: center; margin: 6px 0; color: #ffb454; }
+  #result { font-size: 13px; flex: 1; color: #9ecb7d; }
+  #result.err { color: #e06c75; }
+  #buttons { display: flex; gap: 8px; justify-content: flex-end; }
+  button {
+    padding: 7px 12px; border: 1px solid #3a4356; border-radius: 6px;
+    background: #2a3244; color: #e8ecf1; cursor: pointer; font-size: 12px;
+  }
+  button:hover { background: #364059; }
+  button.primary { background: #2d7d46; border-color: #2d7d46; }
+  button.primary:hover { background: #35934f; }
+</style>
+</head>
+<body>
+  <div id="title">GitGardiyan</div>
+  <div id="msg"></div>
+  <div id="timer"></div>
+  <div id="result" hidden></div>
+  <div id="buttons"></div>
+  <script src="notify.js"></script>
+</body>
+</html>
