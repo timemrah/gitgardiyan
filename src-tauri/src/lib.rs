@@ -6,6 +6,7 @@ pub mod notifier;
 pub mod rules;
 pub mod scheduler;
 pub mod state;
+pub mod tray;
 
 use state::AppState;
 use std::collections::HashMap;
@@ -20,6 +21,10 @@ pub fn run() {
                 let _ = w.set_focus();
             }
         }))
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            None,
+        ))
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             let dir = app.path().app_config_dir().expect("config klasörü yok");
@@ -31,6 +36,9 @@ pub fn run() {
                 notifications: Mutex::new(HashMap::new()),
             });
             scheduler::start(app.handle().clone());
+            tray::create(app)?;
+            // ilk kurulumda otomatik başlatmayı aç; kullanıcı arayüzden kapatabilir
+            let _ = tauri_plugin_autostart::ManagerExt::autolaunch(app.handle()).enable();
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -40,7 +48,17 @@ pub fn run() {
             commands::update_project,
             commands::get_notification,
             commands::notify_action,
+            commands::get_autostart,
+            commands::set_autostart,
         ])
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                if window.label() == "main" {
+                    let _ = window.hide();
+                    api.prevent_close();
+                }
+            }
+        })
         .run(tauri::generate_context!())
         .expect("tauri çalıştırılamadı");
 }

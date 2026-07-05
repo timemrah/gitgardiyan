@@ -164,3 +164,16 @@ pub async fn notify_action(
         other => Err(format!("bilinmeyen işlem: {other}")),
     }
 }
+
+use tauri_plugin_autostart::ManagerExt;
+
+#[tauri::command]
+pub async fn get_autostart(app: tauri::AppHandle) -> Result<bool, String> {
+    app.autolaunch().is_enabled().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn set_autostart(app: tauri::AppHandle, enabled: bool) -> Result<(), String> {
+    let al = app.autolaunch();
+    if enabled { al.enable() } else { al.disable() }.map_err(|e| e.to_string())
+}
