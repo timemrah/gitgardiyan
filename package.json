@@ -6,7 +6,6 @@
     "tauri": "tauri"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2",
-    "js-yaml": "^5.2.1"
+    "@tauri-apps/cli": "^2"
   }
 }
