@@ -81,3 +81,79 @@ pub async fn get_notification(
 ) -> Result<Option<NotifyPayload>, String> {
     Ok(state.notifications.lock().unwrap().get(&label).cloned())
 }
+
+fn today() -> String {
+    chrono::Local::now().format("%Y-%m-%d").to_string()
+}
+
+fn now_minute() -> String {
+    chrono::Local::now().format("%Y-%m-%d %H:%M").to_string()
+}
+
+#[tauri::command]
+pub async fn notify_action(
+    state: State<'_, AppState>,
+    path: String,
+    rule: u8,
+    action: String,
+) -> Result<String, String> {
+    let repo = PathBuf::from(&path);
+    let name = repo
+        .file_name()
+        .map(|s| s.to_string_lossy().into_owned())
+        .unwrap_or(path.clone());
+    let log_dir = state.log_dir.clone();
+
+    match action.as_str() {
+        "mute" => {
+            let mut cfg = state.config.lock().unwrap();
+            if let Some(p) = cfg.projects.iter_mut().find(|p| p.path == repo) {
+                p.muted_date = Some(today());
+            }
+            cfg.save(&state.config_path).map_err(|e| e.to_string())?;
+            log::line(&log_dir, &format!("{name}: bugün için susturuldu"));
+            Ok("Bugün bir daha sorulmayacak.".into())
+        }
+        "proceed" => {
+            let changed = git::changed_file_count(&repo)?;
+            if changed > 0 {
+                let msg = format!("Otomatik yedek: {} ({} dosya)", now_minute(), changed);
+                git::commit_all(&repo, &msg)?;
+                log::line(&log_dir, &format!("{name}: commit — {msg} (kural {rule})"));
+            }
+            match git::push(&repo) {
+                Ok(()) => {
+                    log::line(&log_dir, &format!("{name}: push tamamlandı"));
+                    Ok(format!("{name}: commit ve push tamamlandı."))
+                }
+                Err(e) => {
+                    log::line(&log_dir, &format!("{name}: push başarısız: {e}"));
+                    Err(format!(
+                        "{name}: Push başarısız. Commit yerelde duruyor, sonraki saatte tekrar denenecek. Hata: {e}"
+                    ))
+                }
+            }
+        }
+        "pull" => {
+            let changed = git::changed_file_count(&repo)?;
+            if changed > 0 {
+                let msg = format!("Otomatik yedek: {} ({} dosya)", now_minute(), changed);
+                git::commit_all(&repo, &msg)?;
+                log::line(&log_dir, &format!("{name}: pull öncesi commit — {msg}"));
+            }
+            match git::pull_rebase(&repo)? {
+                git::PullOutcome::Ok => {
+                    log::line(&log_dir, &format!("{name}: pull --rebase tamamlandı"));
+                    Ok(format!("{name}: GitHub'daki değişiklikler çekildi."))
+                }
+                git::PullOutcome::Conflict => {
+                    log::line(&log_dir, &format!("{name}: rebase çakışması, geri alındı"));
+                    Err(format!(
+                        "{name}: Çakışma oluştu, rebase geri alındı. Elle çözülmeli."
+                    ))
+                }
+            }
+        }
+        other => Err(format!("bilinmeyen işlem: {other}")),
+    }
+}

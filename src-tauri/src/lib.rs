@@ -2,6 +2,7 @@ pub mod commands;
 pub mod config;
 pub mod git;
 pub mod log;
+pub mod notifier;
 pub mod rules;
 pub mod state;
 
@@ -36,6 +37,7 @@ pub fn run() {
             commands::remove_project,
             commands::update_project,
             commands::get_notification,
+            commands::notify_action,
         ])
         .run(tauri::generate_context!())
         .expect("tauri çalıştırılamadı");
