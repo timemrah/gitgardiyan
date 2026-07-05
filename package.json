@@ -2,6 +2,11 @@
   "name": "gitgardiyan",
   "version": "0.1.0",
   "private": true,
-  "scripts": { "tauri": "tauri" },
-  "devDependencies": { "@tauri-apps/cli": "^2" }
+  "scripts": {
+    "tauri": "tauri"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2",
+    "js-yaml": "^5.2.1"
+  }
 }
