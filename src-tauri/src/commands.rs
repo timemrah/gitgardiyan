@@ -17,20 +17,24 @@ pub struct ProjectView {
 #[tauri::command]
 pub async fn list_projects(state: State<'_, AppState>) -> Result<Vec<ProjectView>, String> {
     let projects = state.config.lock().unwrap().projects.clone();
-    let mut out = Vec::new();
-    for p in projects {
-        let found = git::is_git_repo(&p.path);
-        let (changed, (remote_ahead, unpushed)) = if found {
-            (
-                git::changed_file_count(&p.path).unwrap_or(0),
-                git::behind_ahead(&p.path).unwrap_or((0, 0)),
-            )
-        } else {
-            (0, (0, 0))
-        };
-        out.push(ProjectView { project: p, found, changed, remote_ahead, unpushed });
-    }
-    Ok(out)
+    tauri::async_runtime::spawn_blocking(move || {
+        let mut out = Vec::new();
+        for p in projects {
+            let found = git::is_git_repo(&p.path);
+            let (changed, (remote_ahead, unpushed)) = if found {
+                (
+                    git::changed_file_count(&p.path).unwrap_or(0),
+                    git::behind_ahead(&p.path).unwrap_or((0, 0)),
+                )
+            } else {
+                (0, (0, 0))
+            };
+            out.push(ProjectView { project: p, found, changed, remote_ahead, unpushed });
+        }
+        out
+    })
+    .await
+    .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
