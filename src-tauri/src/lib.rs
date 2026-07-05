@@ -29,6 +29,12 @@ pub fn run() {
         .setup(|app| {
             let dir = app.path().app_config_dir().expect("config klasörü yok");
             let config_path = dir.join("config.json");
+            let first_run = !config_path.exists();
+            if first_run {
+                if let Err(e) = tauri_plugin_autostart::ManagerExt::autolaunch(app.handle()).enable() {
+                    log::line(&dir, &format!("autostart etkinleştirilemedi: {e}"));
+                }
+            }
             app.manage(AppState {
                 config: Mutex::new(config::Config::load(&config_path)),
                 config_path,
@@ -37,8 +43,6 @@ pub fn run() {
             });
             scheduler::start(app.handle().clone());
             tray::create(app)?;
-            // ilk kurulumda otomatik başlatmayı aç; kullanıcı arayüzden kapatabilir
-            let _ = tauri_plugin_autostart::ManagerExt::autolaunch(app.handle()).enable();
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
