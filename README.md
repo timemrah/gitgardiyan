@@ -27,7 +27,7 @@ npx tauri build    # paket üretimi
 git tag v0.1.0 && git push origin v0.1.0
 ```
 
-Not: macOS paketi imzasızdır; ilk açılışta sağ tık → Aç gerekir.
+Not: macOS paketi ad-hoc imzalıdır (Apple Developer hesabı yok, notarize değil); ilk açılışta sağ tık → Aç gerekir.
 
 ## Ayarlar
 
