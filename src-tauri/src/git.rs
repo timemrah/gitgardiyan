@@ -1,11 +1,18 @@
 use std::path::Path;
 use std::process::Command;
 
+#[cfg(target_os = "windows")]
+const CREATE_NO_WINDOW: u32 = 0x08000000;
+
 fn run(repo: &Path, args: &[&str]) -> Result<String, String> {
-    let out = Command::new("git")
-        .arg("-C")
-        .arg(repo)
-        .args(args)
+    let mut cmd = Command::new("git");
+    cmd.arg("-C").arg(repo).args(args);
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+    let out = cmd
         .output()
         .map_err(|e| format!("git çalıştırılamadı: {e}"))?;
     if out.status.success() {
@@ -20,9 +27,7 @@ fn run(repo: &Path, args: &[&str]) -> Result<String, String> {
 }
 
 pub fn is_git_repo(repo: &Path) -> bool {
-    run(repo, &["rev-parse", "--is-inside-work-tree"])
-        .map(|s| s.trim() == "true")
-        .unwrap_or(false)
+    repo.join(".git").exists()
 }
 
 /// Değişen dosya sayısı, untracked dahil (git status --porcelain satır sayısı).

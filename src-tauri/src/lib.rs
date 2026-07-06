@@ -41,7 +41,14 @@ pub fn run() {
                 log_dir: dir,
                 notifications: Mutex::new(HashMap::new()),
             });
-            if std::process::Command::new("git").arg("--version").output().is_err() {
+            let mut git_version_cmd = std::process::Command::new("git");
+            git_version_cmd.arg("--version");
+            #[cfg(target_os = "windows")]
+            {
+                use std::os::windows::process::CommandExt;
+                git_version_cmd.creation_flags(0x08000000);
+            }
+            if git_version_cmd.output().is_err() {
                 log::line(&app.state::<state::AppState>().log_dir, "git bulunamadı — uygulama çalışamaz");
                 use tauri_plugin_dialog::DialogExt;
                 app.dialog()
