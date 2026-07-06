@@ -16,6 +16,7 @@ button.primary { background: #2d7d46; border-color: #2d7d46; }
 button.toggle-settings.active { background: #364059; border-color: #4a5670; }
 
 .settings { margin-top: 12px; padding-top: 12px; border-top: 1px solid #3a4356; display: flex; flex-direction: column; gap: 12px; }
+.settings[hidden] { display: none; }
 .rule { display: flex; gap: 12px; align-items: flex-start; }
 .rule.off .rule-body { opacity: 0.45; }
 .rule-body { flex: 1; }
