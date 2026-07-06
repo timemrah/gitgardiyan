@@ -7,8 +7,11 @@ pub struct Project {
     pub name: String,
     #[serde(default = "d_threshold")]
     pub threshold: u32,
+    // Eski tek "interval_minutes" alanı kural 1 sıklığına devrolur.
+    #[serde(default = "d_interval", alias = "interval_minutes")]
+    pub interval_changes_minutes: u32,
     #[serde(default = "d_interval")]
-    pub interval_minutes: u32,
+    pub interval_remote_minutes: u32,
     #[serde(default = "d_backup_time")]
     pub backup_time: String,
     #[serde(default = "d_true")]
@@ -31,7 +34,8 @@ impl Project {
             path,
             name,
             threshold: d_threshold(),
-            interval_minutes: d_interval(),
+            interval_changes_minutes: d_interval(),
+            interval_remote_minutes: d_interval(),
             backup_time: d_backup_time(),
             rule_changes: true,
             rule_remote: true,
@@ -90,10 +94,25 @@ mod tests {
         let cfg = Config::load(&file);
         let p = &cfg.projects[0];
         assert_eq!(p.threshold, 10);
-        assert_eq!(p.interval_minutes, 60);
+        assert_eq!(p.interval_changes_minutes, 60);
+        assert_eq!(p.interval_remote_minutes, 60);
         assert_eq!(p.backup_time, "23:00");
         assert!(p.rule_changes && p.rule_remote && p.rule_backup);
         assert_eq!(p.muted_date, None);
+    }
+
+    #[test]
+    fn eski_interval_minutes_kural1_sikligina_devrolur() {
+        let dir = tempfile::tempdir().unwrap();
+        let file = dir.path().join("config.json");
+        std::fs::write(
+            &file,
+            r#"{"projects":[{"path":"/tmp/p","name":"p","interval_minutes":15}]}"#,
+        )
+        .unwrap();
+        let p = &Config::load(&file).projects[0];
+        assert_eq!(p.interval_changes_minutes, 15);
+        assert_eq!(p.interval_remote_minutes, 60);
     }
 
     #[test]

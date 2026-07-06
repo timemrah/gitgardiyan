@@ -19,17 +19,45 @@
       <div class="head">
         <strong class="name"></strong>
         <span class="status"></span>
+        <button class="toggle-settings">Ayarlar</button>
         <button class="remove">Kaldır</button>
       </div>
       <div class="path"></div>
-      <div class="settings">
-        <label>Dosya eşiği <input type="number" class="threshold" min="1"></label>
-        <label>Kontrol (dk) <input type="number" class="interval" min="5"></label>
-        <label>Yedek saati <input type="time" class="backup"></label>
-        <label><input type="checkbox" class="r1"> Değişiklik kuralı</label>
-        <label><input type="checkbox" class="r2"> Uzak kontrol</label>
-        <label><input type="checkbox" class="r3"> Günlük yedek</label>
-        <button class="save">Kaydet</button>
+      <div class="settings" hidden>
+        <div class="rule">
+          <label class="switch"><input type="checkbox" class="r1"><span class="slider"></span></label>
+          <div class="rule-body">
+            <div class="rule-head">
+              <span class="rule-name">Dosya eşiği</span>
+              <label class="param">eşik <input type="number" class="threshold" min="1"></label>
+              <label class="param">sıklık (dk) <input type="number" class="interval-changes" min="5"></label>
+            </div>
+            <p class="rule-desc">Bu sıklıkla bakılır; değişen dosya sayısı eşiği aşarsa otomatik commit + push yapılır.</p>
+          </div>
+        </div>
+        <div class="rule">
+          <label class="switch"><input type="checkbox" class="r2"><span class="slider"></span></label>
+          <div class="rule-body">
+            <div class="rule-head">
+              <span class="rule-name">Uzak kontrol</span>
+              <label class="param">sıklık (dk) <input type="number" class="interval-remote" min="5"></label>
+            </div>
+            <p class="rule-desc">Bu sıklıkla GitHub'a bakılır; yeni commit varsa çekmek isteyip istemediğin sorulur.</p>
+          </div>
+        </div>
+        <div class="rule">
+          <label class="switch"><input type="checkbox" class="r3"><span class="slider"></span></label>
+          <div class="rule-body">
+            <div class="rule-head">
+              <span class="rule-name">Günlük yedek</span>
+              <label class="param">saat <input type="time" class="backup"></label>
+            </div>
+            <p class="rule-desc">Her gün bu saatte bekleyen değişiklikler yedeklenir.</p>
+          </div>
+        </div>
+        <div class="settings-actions">
+          <button class="save primary">Kaydet</button>
+        </div>
       </div>
     </section>
   </template>

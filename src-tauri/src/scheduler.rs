@@ -1,5 +1,5 @@
 use crate::config::Project;
-use crate::rules::{self, Decision, Snapshot};
+use crate::rules::{self, Decision, Due, Snapshot};
 use crate::state::AppState;
 use crate::{git, log, notifier};
 use std::collections::HashMap;
@@ -13,9 +13,16 @@ fn snapshot(p: &Project) -> Snapshot {
     Snapshot { changed_files, remote_ahead, unpushed }
 }
 
+/// Kural bazlı son denetim zamanları (kural 1 ve kural 2 ayrı sıklıkta).
+type LastChecks = HashMap<PathBuf, (Option<Instant>, Option<Instant>)>;
+
+fn is_due(last: Option<Instant>, minutes: u32) -> bool {
+    last.map_or(true, |t| t.elapsed().as_secs() >= minutes as u64 * 60)
+}
+
 pub fn start(app: AppHandle) {
     std::thread::spawn(move || {
-        let mut last_check: HashMap<PathBuf, Instant> = HashMap::new();
+        let mut last_check: LastChecks = HashMap::new();
         let mut last_backup: HashMap<PathBuf, String> = HashMap::new();
         loop {
             tick(&app, &mut last_check, &mut last_backup);
@@ -26,7 +33,7 @@ pub fn start(app: AppHandle) {
 
 fn tick(
     app: &AppHandle,
-    last_check: &mut HashMap<PathBuf, Instant>,
+    last_check: &mut LastChecks,
     last_backup: &mut HashMap<PathBuf, String>,
 ) {
     let state = app.state::<AppState>();
@@ -49,29 +56,38 @@ fn tick(
         {
             last_backup.insert(p.path.clone(), today.clone());
             let snap = snapshot(&p);
-            if let Decision::DailyBackup = rules::decide(&p, &snap, &today, true) {
+            if let Decision::DailyBackup =
+                rules::decide(&p, &snap, &today, true, &Due { changes: false, remote: false })
+            {
                 log::line(&log_dir, &format!("{}: günlük yedek bildirimi", p.name));
                 notifier::show(app, &p, &Decision::DailyBackup);
                 continue; // aynı projede aynı anda tek bildirim
             }
         }
 
-        // Saatlik kontrol (proje başına interval_minutes)
-        let due = last_check
-            .get(&p.path)
-            .map_or(true, |t| t.elapsed().as_secs() >= p.interval_minutes as u64 * 60);
-        if !due {
+        // Kural bazlı denetim: her kural kendi sıklığında vadelenir.
+        let entry = last_check.entry(p.path.clone()).or_insert((None, None));
+        let due = Due {
+            changes: is_due(entry.0, p.interval_changes_minutes),
+            remote: is_due(entry.1, p.interval_remote_minutes),
+        };
+        if !due.changes && !due.remote {
             continue;
         }
-        last_check.insert(p.path.clone(), Instant::now());
+        if due.changes {
+            entry.0 = Some(Instant::now());
+        }
+        if due.remote {
+            entry.1 = Some(Instant::now());
+        }
 
-        if p.rule_remote {
+        if due.remote && p.rule_remote {
             if let Err(e) = git::fetch(&p.path) {
                 log::line(&log_dir, &format!("{}: fetch başarısız: {}", p.name, e.trim()));
             }
         }
         let snap = snapshot(&p);
-        match rules::decide(&p, &snap, &today, false) {
+        match rules::decide(&p, &snap, &today, false, &due) {
             Decision::Nothing => {}
             Decision::SilentPush => match git::push(&p.path) {
                 Ok(()) => log::line(&log_dir, &format!("{}: bekleyen commit'ler push edildi", p.name)),

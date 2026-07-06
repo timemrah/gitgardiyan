@@ -2,6 +2,7 @@ const { invoke } = window.__TAURI__.core;
 const { open } = window.__TAURI__.dialog;
 
 const errBox = document.getElementById('error');
+const openPanels = new Set();
 
 function clampInt(value, min, fallback) {
   const n = parseInt(value, 10);
@@ -43,13 +44,40 @@ function render(views) {
     if (st.warn) stEl.classList.add('warn');
     el.querySelector('.path').textContent = p.path;
     el.querySelector('.threshold').value = p.threshold;
-    el.querySelector('.interval').value = p.interval_minutes;
+    el.querySelector('.interval-changes').value = p.interval_changes_minutes;
+    el.querySelector('.interval-remote').value = p.interval_remote_minutes;
     el.querySelector('.backup').value = p.backup_time;
     el.querySelector('.r1').checked = p.rule_changes;
     el.querySelector('.r2').checked = p.rule_remote;
     el.querySelector('.r3').checked = p.rule_backup;
 
     const root = el.querySelector('.project');
+
+    // Kural kapalıyken inputları soluklaştır ve kilitle.
+    function syncRules() {
+      for (const rule of root.querySelectorAll('.rule')) {
+        const on = rule.querySelector('input[type="checkbox"]').checked;
+        rule.classList.toggle('off', !on);
+        for (const input of rule.querySelectorAll('.param input')) input.disabled = !on;
+      }
+    }
+    for (const cb of root.querySelectorAll('.rule input[type="checkbox"]')) {
+      cb.addEventListener('change', syncRules);
+    }
+    syncRules();
+
+    // Panel durumu yenilemeler arasında korunur (kaydet sonrası kapanmasın).
+    const settingsEl = root.querySelector('.settings');
+    const toggleBtn = root.querySelector('.toggle-settings');
+    settingsEl.hidden = !openPanels.has(p.path);
+    toggleBtn.classList.toggle('active', !settingsEl.hidden);
+    toggleBtn.addEventListener('click', () => {
+      settingsEl.hidden = !settingsEl.hidden;
+      toggleBtn.classList.toggle('active', !settingsEl.hidden);
+      if (settingsEl.hidden) openPanels.delete(p.path);
+      else openPanels.add(p.path);
+    });
+
     el.querySelector('.remove').addEventListener('click', async () => {
       try { await invoke('remove_project', { path: p.path }); refresh(); }
       catch (e) { showError(e); }
@@ -58,7 +86,8 @@ function render(views) {
       const updated = {
         ...p,
         threshold: clampInt(root.querySelector('.threshold').value, 1, 10),
-        interval_minutes: clampInt(root.querySelector('.interval').value, 5, 60),
+        interval_changes_minutes: clampInt(root.querySelector('.interval-changes').value, 5, 60),
+        interval_remote_minutes: clampInt(root.querySelector('.interval-remote').value, 5, 60),
         backup_time: root.querySelector('.backup').value || '23:00',
         rule_changes: root.querySelector('.r1').checked,
         rule_remote: root.querySelector('.r2').checked,
