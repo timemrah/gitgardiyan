@@ -4,6 +4,15 @@ const { open } = window.__TAURI__.dialog;
 const errBox = document.getElementById('error');
 const openPanels = new Set();
 
+// "9:5" -> "09:05"; geçersizse null (24 saat biçimi, yerelden bağımsız).
+function normalizeTime(value) {
+  const m = /^(\d{1,2}):(\d{1,2})$/.exec(value.trim());
+  if (!m) return null;
+  const h = parseInt(m[1], 10), min = parseInt(m[2], 10);
+  if (h > 23 || min > 59) return null;
+  return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+}
+
 function clampInt(value, min, fallback) {
   const n = parseInt(value, 10);
   if (Number.isNaN(n)) return fallback;
@@ -83,12 +92,17 @@ function render(views) {
       catch (e) { showError(e); }
     });
     el.querySelector('.save').addEventListener('click', async () => {
+      const backupTime = normalizeTime(root.querySelector('.backup').value || '23:00');
+      if (backupTime === null) {
+        showError('Yedek saati SS:DD biçiminde olmalı, örn. 23:00');
+        return;
+      }
       const updated = {
         ...p,
         threshold: clampInt(root.querySelector('.threshold').value, 1, 10),
         interval_changes_minutes: clampInt(root.querySelector('.interval-changes').value, 5, 60),
         interval_remote_minutes: clampInt(root.querySelector('.interval-remote').value, 5, 60),
-        backup_time: root.querySelector('.backup').value || '23:00',
+        backup_time: backupTime,
         rule_changes: root.querySelector('.r1').checked,
         rule_remote: root.querySelector('.r2').checked,
         rule_backup: root.querySelector('.r3').checked,

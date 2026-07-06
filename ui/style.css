@@ -24,6 +24,7 @@ button.toggle-settings.active { background: #364059; border-color: #4a5670; }
 .rule-name { font-size: 13px; font-weight: 600; min-width: 96px; }
 .param { font-size: 12px; color: #b6bfcd; display: inline-flex; align-items: center; gap: 6px; }
 .param input[type="number"] { width: 60px; }
+.param input.backup { width: 60px; text-align: center; }
 .param input { background: #1e2430; color: #e8ecf1; border: 1px solid #3a4356; border-radius: 4px; padding: 4px 6px; }
 .param input:disabled { cursor: not-allowed; }
 .rule-desc { font-size: 11px; color: #6b7688; margin-top: 3px; }
