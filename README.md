@@ -8,8 +8,6 @@ Git projelerinde commit, push ve pull işlemlerini unutmayı engelleyen sistem t
 - **Saatlik uzak kontrol:** GitHub yereldekinden ilerideyse "çekmek ister misiniz?" diye sorar (`pull --rebase`; çakışmada geri alır, elle çözüme bırakır).
 - **Günlük yedek (23:00):** Bekleyen commit/push varsa geri sayımlı bildirimle günlük yedek alır.
 
-Tasarım: `docs/superpowers/specs/2026-07-06-gitgardiyan-design.md`
-
 ## Kurulum (geliştirici)
 
 Gereksinimler: Rust (rustup), Node.js, sistemde `git`. Linux'ta ayrıca:
@@ -33,4 +31,4 @@ Not: macOS paketi imzasızdır; ilk açılışta sağ tık → Aç gerekir.
 
 ## Ayarlar
 
-Config: işletim sisteminin standart config klasöründe `com.emrah.gitgardiyan/config.json`. Log: aynı klasörde `gitgardiyan.log`.
+Config: işletim sisteminin standart config klasöründe `com.gitgardiyan.app/config.json`. Log: aynı klasörde `gitgardiyan.log`.
